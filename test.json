@@ -1,0 +1,13 @@
+{
+    "base-url": "http://localhost:8080/api/v1/request",
+    "auth": "user",
+    "cases": {
+        "01": {
+            "method": "GET",
+            "uri": "/",
+            "params": {
+                "login": "apushkin"
+            }
+        }
+    }
+}

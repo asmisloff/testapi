@@ -1,0 +1,1 @@
+java -jar -Xmx50m C:\Users\asmisloff\OpenideProjects\lm-agent\target\lm-agent-1.0-SNAPSHOT-jar-with-dependencies.jar
