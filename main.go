@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testapi/conf"
+	"testapi/req"
 )
 
 func main() {
@@ -12,5 +13,5 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(suite.Cases[os.Args[2]])
+	req.ExecRequest(suite, os.Args[2])
 }

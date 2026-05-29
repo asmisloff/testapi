@@ -10,8 +10,21 @@ import (
 // TestSuite представляет набор тестовых запросов
 type TestSuite struct {
 	BaseURL string          `json:"base-url"`
-	Auth    string          `json:"auth"`
+	Auth    Auth            `json:"auth"`
 	Cases   map[string]Case `json:"cases"`
+}
+
+// Auth определяет параметры аутентификации
+type Auth struct {
+	Type        string          `json:"type"`
+	URL         string          `json:"url"`
+	Credentials AuthCredentials `json:"credentials"`
+}
+
+// AuthCredentials содержит логин и пароль для аутентификации
+type AuthCredentials struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 // Case определяет параметры тестового запроса
