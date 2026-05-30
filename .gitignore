@@ -1,0 +1,6 @@
+*.bat
+ans.md
+lm-agent.yml
+prompt.md
+test.json
+*.exe
