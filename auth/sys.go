@@ -19,7 +19,10 @@ var client = http.Client{
 }
 
 func GetToken(auth *conf.Auth) (string, error) {
-	return requestToken(auth.URL, &auth.Credentials)
+	if auth.Type == "sys" {
+		return requestToken(auth.URL, &auth.Credentials)
+	}
+	return "", nil
 }
 
 // request запрашивает токен у системы авторизации
