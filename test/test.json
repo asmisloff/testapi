@@ -1,0 +1,20 @@
+{
+  "base-url": "http://localhost:8080",
+  "auth": {
+    "type": "sys",
+    "url": "http://localhost:8080/auth/token",
+    "credentials": {
+      "username": "admin",
+      "password": "secret"
+    }
+  },
+  "cases": {
+    "01": {
+      "method": "GET",
+      "uri": "/api/user/settings",
+      "params": {
+        "lang": "ru"
+      }
+    }
+  }
+}
