@@ -1,3 +1,6 @@
+// Package auth реализует получение токена доступа для различных типов аутентификации.
+// Для типа "sys" используется базовая HTTP-аутентификация с логином и паролем,
+// указанными в конфигурации, и возвращается токен из ответа сервера (access_token).
 package auth
 
 import (
@@ -18,6 +21,10 @@ var client = http.Client{
 	Timeout: 30 * time.Second,
 }
 
+// GetToken возвращает токен доступа на основе настроек аутентификации.
+// Если в конфигурации указан тип "sys", запрос отправляется с Basic‑аутентификацией,
+// используя логин и пароль из параметров Credentials, и возвращается access_token из ответа.
+// Для других типов возвращается пустая строка и nil-ошибка.
 func GetToken(auth *conf.Auth) (string, error) {
 	if auth.Type == "sys" {
 		return requestToken(auth.URL, &auth.Credentials)
@@ -42,7 +49,7 @@ func requestToken(url string, creds *conf.AuthCredentials) (string, error) {
 	if resp.StatusCode != http.StatusOK {
 		content, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return "", fmt.Errorf("Сервер акторизации ответил %d, тело ответа прочитать не удалось: %w", resp.StatusCode, err)
+			return "", fmt.Errorf("Сервер авторизации ответил %d, тело ответа прочитать не удалось: %w", resp.StatusCode, err)
 		}
 		return "", fmt.Errorf("Сервер авторизации вернул ошибку %d: %s", resp.StatusCode, content)
 	}
