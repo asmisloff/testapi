@@ -7,9 +7,18 @@ import (
 	"os"
 )
 
+// GetToken возвращает токен авторизации из переменной состояния с ключом key
 func GetToken(key string) (string, error) {
 	if entry, ok := registry[key]; ok {
 		return entry.Token, nil
+	}
+	return "", fmt.Errorf("отсутствует переменная состояния с ключом %s", key)
+}
+
+// GetRefreshToken возвращает refresh-токен из переменной состояния с ключом key
+func GetRefreshToken(key string) (string, error) {
+	if entry, ok := registry[key]; ok {
+		return entry.RefreshToken, nil
 	}
 	return "", fmt.Errorf("отсутствует переменная состояния с ключом %s", key)
 }
