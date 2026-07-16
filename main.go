@@ -2,16 +2,20 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"testapi/conf"
-	"testapi/req"
+	"log"
+	"testapi/state"
 )
 
 func main() {
-	suite, err := conf.Load(os.Args[1])
+	token, err := state.GetToken("test01")
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
-	req.ExecRequest(suite, os.Args[2])
+	fmt.Println(token)
+	// suite, err := conf.Load(os.Args[1])
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+	// req.ExecRequest(suite, os.Args[2])
 }

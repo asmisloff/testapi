@@ -12,6 +12,28 @@ import (
 	"time"
 )
 
+const authFilePath = "auth"
+
+// GetToken возвращает токен доступа на основе настроек аутентификации.
+// Если в конфигурации указан тип "sys", запрос отправляется с Basic‑аутентификацией,
+// используя логин и пароль из параметров Credentials, и возвращается access_token из ответа.
+// Для других типов возвращается пустая строка и nil-ошибка.
+func GetToken(auth *conf.Auth) (string, error) {
+	if auth.Type == "sys" {
+		// content, err := os.ReadFile(authFilePath)
+		// if err != nil {
+		// 	return "", fmt.Errorf("чтение файла %q: %w", authFilePath, err)
+		// }
+		// authRegistry := make(internal.AuthRegistry)
+		// json.Unmarshal(content, &authRegistry)
+		// if val, ok := authRegistry[auth.URL]; ok {
+		// 	return val.Token, nil
+		// }
+		return requestToken(auth.URL, &auth.Credentials)
+	}
+	return "", nil
+}
+
 // tokenResponse представляет ответ сервера авторизации
 type tokenResponse struct {
 	AccessToken string `json:"access_token"`
@@ -21,18 +43,7 @@ var client = http.Client{
 	Timeout: 30 * time.Second,
 }
 
-// GetToken возвращает токен доступа на основе настроек аутентификации.
-// Если в конфигурации указан тип "sys", запрос отправляется с Basic‑аутентификацией,
-// используя логин и пароль из параметров Credentials, и возвращается access_token из ответа.
-// Для других типов возвращается пустая строка и nil-ошибка.
-func GetToken(auth *conf.Auth) (string, error) {
-	if auth.Type == "sys" {
-		return requestToken(auth.URL, &auth.Credentials)
-	}
-	return "", nil
-}
-
-// request запрашивает токен у системы авторизации
+// requestToken запрашивает токен у системы авторизации
 func requestToken(url string, creds *conf.AuthCredentials) (string, error) {
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
