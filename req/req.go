@@ -37,6 +37,10 @@ func ExecRequest(suite *conf.TestSuite, caseId string) error {
 
 // Get выполняет GET запрос с авторизацией и опциональными параметрами.
 func Get(url string, token string, params map[string]string) (status int, body string, err error) {
+	if token == "" {
+		return -1, "", fmt.Errorf("токен авторизации пуст")
+	}
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return -1, "", fmt.Errorf("ошибка создания запроса: %w", err)

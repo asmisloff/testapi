@@ -28,7 +28,9 @@ func init() {
 	if err != nil {
 		log.Fatalf("ошибка при попытке чтения файла состояния: %v", err)
 	}
-	json.Unmarshal(data, &registry)
+	if err := json.Unmarshal(data, &registry); err != nil {
+		log.Fatalf("ошибка разбора содержимого state.json: %v", err)
+	}
 }
 
 // TestapiState представляет реестр переменных состояния приложения.

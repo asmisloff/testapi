@@ -12,23 +12,9 @@ import (
 	"time"
 )
 
-const authFilePath = "auth"
-
 // GetToken возвращает токен доступа на основе настроек аутентификации.
-// Если в конфигурации указан тип "sys", запрос отправляется с Basic‑аутентификацией,
-// используя логин и пароль из параметров Credentials, и возвращается access_token из ответа.
-// Для других типов возвращается пустая строка и nil-ошибка.
 func GetToken(auth *conf.Auth) (string, error) {
 	if auth.Type == "sys" {
-		// content, err := os.ReadFile(authFilePath)
-		// if err != nil {
-		// 	return "", fmt.Errorf("чтение файла %q: %w", authFilePath, err)
-		// }
-		// authRegistry := make(internal.AuthRegistry)
-		// json.Unmarshal(content, &authRegistry)
-		// if val, ok := authRegistry[auth.URL]; ok {
-		// 	return val.Token, nil
-		// }
 		return requestToken(auth.URL, &auth.Credentials)
 	}
 	return "", nil
