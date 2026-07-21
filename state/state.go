@@ -35,7 +35,7 @@ func init() {
 			registry.flush()
 			return
 		}
-		log.Fatalf("ошибка при попытке чтения файла состояния: %v, %v", err)
+		log.Fatalf("ошибка при попытке чтения файла состояния: %v", err)
 	}
 	if err := json.Unmarshal(data, &registry); err != nil {
 		log.Fatalf("ошибка разбора содержимого %v: %v", stateFileName, err)
