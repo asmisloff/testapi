@@ -2,20 +2,14 @@ package main
 
 import (
 	"fmt"
-	"testapi/state"
+	"testapi/auth"
 )
 
 func main() {
-	token, err := state.GetToken("test01")
+	token, err := auth.GetSystemToken("sys_3.23")
 	if err != nil {
 		fmt.Println(err)
-		state.SaveState("test01", &state.StateEntry{Token: "12345", RefreshToken: "54321"})
+	} else {
+		fmt.Println(token)
 	}
-	fmt.Println(token)
-	// suite, err := conf.Load(os.Args[1])
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-	// req.ExecRequest(suite, os.Args[2])
 }

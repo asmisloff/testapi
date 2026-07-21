@@ -7,15 +7,40 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"testapi/conf"
+	"testapi/state"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
+
+func GetSystemToken(key string) (string, error) {
+	stateVar, exists := state.Get(key)
+	if !exists {
+		log.Fatalf("Неизвестная переменная состояния %v", key)
+	}
+	var err error
+	if stateVar.ExpiredAt < time.Now().Unix() {
+		stateVar.Token, err = requestToken(stateVar.Url, stateVar.Login, stateVar.Password)
+		if err == nil {
+			var token *jwt.Token
+			token, _, err = jwt.NewParser().ParseUnverified(stateVar.Token, jwt.MapClaims{})
+			if err == nil {
+				fmt.Println(token.Claims)
+				stateVar.ExpiredAt = int64(token.Claims.(jwt.MapClaims)["exp"].(float64))
+				state.SaveState(key, stateVar)
+			}
+		}
+	}
+	return stateVar.Token, err
+}
 
 // GetToken возвращает токен доступа на основе настроек аутентификации.
 func GetToken(auth *conf.Auth) (string, error) {
 	if auth.Type == "sys" {
-		return requestToken(auth.URL, &auth.Credentials)
+		return requestToken(auth.URL, auth.Credentials.Username, auth.Credentials.Password)
 	}
 	return "", nil
 }
@@ -30,12 +55,12 @@ var client = http.Client{
 }
 
 // requestToken запрашивает токен у системы авторизации
-func requestToken(url string, creds *conf.AuthCredentials) (string, error) {
+func requestToken(url string, login string, password string) (string, error) {
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		return "", err
 	}
-	req.SetBasicAuth(creds.Username, creds.Password)
+	req.SetBasicAuth(login, password)
 
 	resp, err := client.Do(req)
 	if err != nil {
