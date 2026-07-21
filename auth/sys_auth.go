@@ -7,34 +7,46 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
+	"strings"
+	"time"
+
 	"testapi/conf"
 	"testapi/state"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// GetSystemToken возвращает действующий системный токен для заданного ключа состояния.
+// Если срок жизни токена истёк, функция автоматически запрашивает новый токен через
+// базовую HTTP-аутентификацию и сохраняет его в состоянии приложения.
 func GetSystemToken(key string) (string, error) {
 	stateVar, exists := state.Get(key)
 	if !exists {
-		log.Fatalf("Неизвестная переменная состояния %v", key)
+		return "", fmt.Errorf("переменная состояния %q не найдена", key)
 	}
-	var err error
-	if stateVar.ExpiredAt < time.Now().Unix() {
-		stateVar.Token, err = requestToken(stateVar.Url, stateVar.Login, stateVar.Password)
-		if err == nil {
-			var token *jwt.Token
-			token, _, err = jwt.NewParser().ParseUnverified(stateVar.Token, jwt.MapClaims{})
-			if err == nil {
-				fmt.Println(token.Claims)
-				stateVar.ExpiredAt = int64(token.Claims.(jwt.MapClaims)["exp"].(float64))
-				state.SaveState(key, stateVar)
-			}
-		}
+
+	if stateVar.Token != "" && stateVar.ExpiredAt > time.Now().Unix() {
+		return stateVar.Token, nil
 	}
-	return stateVar.Token, err
+
+	newToken, err := requestToken(stateVar.Url, stateVar.Login, stateVar.Password)
+	if err != nil {
+		return "", fmt.Errorf("ошибка получения нового токена: %w", err)
+	}
+
+	exp, err := parseExpiryClaim(newToken)
+	if err != nil {
+		return "", fmt.Errorf("не удалось определить срок действия нового токена: %w", err)
+	}
+
+	stateVar.Token = newToken
+	stateVar.ExpiredAt = exp
+	if err := state.SaveState(key, stateVar); err != nil {
+		return "", fmt.Errorf("ошибка при сохранении файла состояния: %w", err)
+	}
+
+	return newToken, nil
 }
 
 // GetToken возвращает токен доступа на основе настроек аутентификации.
@@ -43,6 +55,46 @@ func GetToken(auth *conf.Auth) (string, error) {
 		return requestToken(auth.URL, auth.Credentials.Username, auth.Credentials.Password)
 	}
 	return "", nil
+}
+
+// decodeJWTPayload извлекает полезную нагрузку (claims) из JWT‑токена без верификации подписи.
+func decodeJWTPayload(tokenStr string) (map[string]any, error) {
+	parts := strings.Split(tokenStr, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("некорректный формат JWT")
+	}
+
+	decoded, err := jwt.NewParser().DecodeSegment(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("ошибка декодирования payload: %w", err)
+	}
+
+	var claims map[string]any
+	if err := json.Unmarshal(decoded, &claims); err != nil {
+		return nil, fmt.Errorf("ошибка разбора payload: %w", err)
+	}
+
+	return claims, nil
+}
+
+// parseExpiryClaim извлекает поле exp из JWT‑токена и возвращает его как unix-время.
+func parseExpiryClaim(tokenStr string) (int64, error) {
+	claims, err := decodeJWTPayload(tokenStr)
+	if err != nil {
+		return 0, fmt.Errorf("не удалось извлечь payload: %w", err)
+	}
+
+	rawExp, ok := claims["exp"]
+	if !ok {
+		return 0, fmt.Errorf("поле exp отсутствует в payload")
+	}
+
+	expFloat, ok := rawExp.(float64)
+	if !ok {
+		return 0, fmt.Errorf("поле exp имеет некорректный тип %T", rawExp)
+	}
+
+	return int64(expFloat), nil
 }
 
 // tokenResponse представляет ответ сервера авторизации
